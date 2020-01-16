@@ -1,0 +1,16 @@
+\chapter{Introducción}
+
+%\textbf{Aprendizaje Automático} (del inglés, \textit{Machine Learning}) 
+%\cite{Mitchell:1997:ML:541177}.
+% \footnote{\url{https://www.kaggle.com/c/house-prices-advanced-regression-techniques}}.
+% ``características'' o ``atributos'' 
+
+Con la avenida de la masividad de las cámaras digitales en un principio y ahora con los dispositivos móviles sumando a las redes sociales las personas capturan y guardan imágenes a un ritmo cada vez más creciente, pero las mismas no están predispuestas a anotarlas con relevantes descripciones ya que es costoso por diferentes razones como lo puede ser la subjetividad del problema y por otra perspectiva aún más simple como lo es el tiempo. Ahora bien ¿Para qué necesitamos tener estas imágenes anotadas?, ¿Qué impacto generaría poder tener un algoritmo que lo realice de manera automática?, bueno la clave para entender la importancia es fijarse en los casos de usos en los cuales se podría automatizar los procesos, como por ejemplo uno de ellos es el etiquetado de imágenes para entrenar algún algoritmo de manera supervisada (clasificadores, detectores), ya veremos más adelante lo que esto significa, otro caso podría ser la búsqueda de imágenes en una base de datos a través de palabras claves. El impacto de contar con este tipo de algoritmos sería una reducción del tiempo humano que se dedican a estas tareas.
+
+En este trabajo se utilizará un modelo \textit{multimodal} que utiliza representaciones vectoriales tanto de imágenes como de palabras, para las primeras utilizaremos redes neuronales profundas pre-entrenadas de uso generalizado en visión por computadora, como por ejemplo \textit{VGG19} \cite{VGG}, para la representación vectorial de las etiquetas, utilizaremos word embeddings pre-entrenados como \textit{word2vec} \cite{mikolov2013efficient}, \textit{Bert} \cite{devlin2018bert}.
+
+En los experimentos, utilizaremos el conjunto de datos COCO Captions \cite{chen2015microsoft}. En este corpus, las imágenes se encuentran asociadas a las denominadas \textit{captions}, que son descripciones cortas en lenguaje natural realizadas por voluntarios. Para obtener etiquetas a partir de estas captions, procesaremos las oraciones utilizando técnicas de Procesamiento de Lenguaje Natural como lematización, etiquetado morfosintáctico (PoS tagging) y análisis sintáctico (parsing). El foco central de los experimentos se basará en el estudio de heurísticas para la detección de sinónimos e hiperónimos que permitan mejorar el conjunto de etiquetas y en particular eliminar etiquetas redundantes. Para ello utilizaremos recursos lingüísticos clásicos como WordNet \cite{worNet}.
+
+Para aprender la función bilineal utilizaremos una función de costo estructurada orientada a ranking \cite{PaperDirectors}, presentada originalmente en un trabajo colaborativo realizado por los directores.
+
+Este trabajo está organizado de la siguiente manera: en la sección 2 se introducirán los conceptos teóricos necesarios para comprender todo lo que se utilizará. En la sección 3 se abordará el enfoque utilizado en el paper \cite{PaperDirectors} para atacar la problemática del etiquetado de imágenes. Luego en la sección 4 se introducirá en los experimentos realizados, mostrando los resultados obtenidos. Por último se dará una conclusión y planteamientos sobre trabajos futuros.

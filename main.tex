@@ -1,0 +1,179 @@
+%Plantilla basada en "Template for Masters / Doctoral Thesis" (plantilla disponible en writeLaTex) que subió LaTeXTemplates.com
+
+\documentclass[12pt]{book}
+\usepackage[paperwidth=17cm, paperheight=22.5cm, bottom=2.5cm, right=2.5cm]{geometry}
+\usepackage{fixltx2e}
+\usepackage{amssymb,amsmath,amsthm} %paquete para símbolo matemáticos
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc} %Paquete para escribir acentos y otros símbolos directamente
+\usepackage{enumerate}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{chicago}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[nottoc]{tocbibind}
+\usepackage[hyphens]{url}
+\usepackage[pdftex,
+            pdfauthor={Nicolas Peretti},
+            pdftitle={Aprendizaje Multimodal aplicado al Etiquetado de Imágenes},
+            pdfsubject={Licenciatura en Ciencias de la Computación}]{hyperref}
+
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{graphicx}% http://ctan.org/pkg/graphicx
+\usepackage{array}% http://ctan.org/pkg/array
+
+\begin{document}
+
+%----------------------------------------------------------------------------------------
+%	COMANDOS PERSONALIZADOS
+%----------------------------------------------------------------------------------------
+
+%SI TU TESIS TIENE TEOREMAS Y DEMOSTRACIONES, PUEDES DESCOMENTAR Y USAR LOS SIGUIENTES COMANDOS
+
+%\renewcommand{\proofname}{Demostración}
+%\providecommand{\norm}[1]{\lVert#1\rVert} %Provee el comando para producir una norma.
+%\providecommand{\innp}[1]{\langle#1\rangle} 
+%\newcommand{\seno}{\mathrm{sen}}
+%\newcommand{\diff}{\mathrm{d}}
+
+%\newtheorem{teo}{Teorema}[section] 
+%\newtheorem{cor}[teo]{Corolario}
+%\newtheorem{lem}[teo]{Lema}
+
+%\theoremstyle{definition}
+%\newtheorem{dfn}[teo]{Definición}
+
+%\theoremstyle{remark}
+%\newtheorem{obs}[teo]{Observación}
+
+%\allowdisplaybreaks
+
+
+%----------------------------------------------------------------------------------------
+%	PORTADA
+%----------------------------------------------------------------------------------------
+
+\title{Aprendizaje Multimodal aplicado al Etiquetado de Imágenes}
+
+\begin{titlepage}
+\begin{center}
+
+\textsc{\Large{Facultad de Matemática, Astronomía, Física y Computación}}\\[1em]
+\textsc{\large{Universidad Nacional de Córdoba}}\\[0.5em]
+
+\begin{figure}[h]
+\begin{center}
+\includegraphics[width=.3\linewidth]{images/unc.jpg}
+\end{center}
+\end{figure}
+\vspace{-0.1em}
+
+\LARGE{\textbf{Aprendizaje Multimodal aplicado al Etiquetado de Imágenes}}\\[0.5em]
+
+\textsc{\normalsize{Tesis para obtener el título de}}\\
+
+\textsc{\large{Licenciado en Ciencias de la Computación}}\\
+
+\textsc{\normalsize{Autor:} \Large{Nicolás Jesús Peretti}}\\
+
+\textsc{\normalsize{Directores:} \large{Franco Luque y Jorge Sánchez}}
+
+\end{center}
+
+\vspace*{\fill}
+\textsc{Córdoba, Argentina \hspace*{\fill} 19 de diciembre de 2019}
+
+\end{titlepage}
+
+
+%----------------------------------------------------------------------------------------
+%	DEDICATORIA
+%----------------------------------------------------------------------------------------
+
+% \pagestyle{empty}
+% \frontmatter
+
+% \chapter*{}
+% \begin{flushright}
+% \textit{DEDICATORIA}
+% \end{flushright}
+
+
+%----------------------------------------------------------------------------------------
+%	AGRADECIMIENTOS
+%----------------------------------------------------------------------------------------
+
+% \chapter*{Agradecimientos}
+% %\markboth{AGRADECIMIENTOS23}{AGRADECIMIENTOS} % encabezado 
+
+% ¡Muchas gracias a todos!
+
+
+%----------------------------------------------------------------------------------------
+%	PREFACIO
+%----------------------------------------------------------------------------------------
+
+\chapter*{Resumen}
+
+\pagestyle{plain}
+\markboth{PREFACIO23}{PREFACIO} % encabezado 
+
+El aprendizaje multimodal estudia problemas de aprendizaje automático utilizando datos que combinan información de diferente naturaleza. Un ejemplo de tarea multimodal es el etiquetado de imágenes, donde una imagen debe ser etiquetada con términos (palabras) que describan el contenido de la imagen.
+En este trabajo proponemos estudiar modelos que permiten etiquetar imágenes a través de funciones que den una ordenación (ránking) de etiquetas posibles a cada imagen dada. Este ránking se obtiene a partir de una puntuación (score) que se obtiene de una función bilineal que combina representaciones de imágenes con representaciones de etiquetas textuales.
+
+%----------------------------------------------------------------------------------------
+%	TABLA DE CONTENIDOS
+%---------------------------------------------------------------------------------------
+
+\tableofcontents
+
+
+%----------------------------------------------------------------------------------------
+%	TESIS
+%----------------------------------------------------------------------------------------
+\mainmatter %empieza la numeración de las páginas
+\pagestyle{headings}
+
+\include{chapters/01_introduction}
+
+\include{chapters/02_teoric_framework}
+
+\include{chapters/03_image_tagging}
+
+\include{chapters/04_experiments}
+
+\include{chapters/05_conclusions}
+
+\thispagestyle{empty}
+
+
+%----------------------------------------------------------------------------------------
+%	APÉNDICES
+%----------------------------------------------------------------------------------------
+
+% \addtocontents{toc}{\vspace{2em}} % Agrega espacios en la toc
+
+% \appendix % Los siguientes capítulos son apéndices
+
+%  Incluye los apéndices en el folder de apéndices
+
+% \include{Apendices/Ap}
+\thispagestyle{empty}
+%\include{Apendices/AppendixB}
+%\include{Apendices/AppendixC}
+
+\addtocontents{toc}{\vspace{2em}} % Agrega espacio en la toc
+
+
+%----------------------------------------------------------------------------------------
+%	BIBLIOGRAFÍA
+%----------------------------------------------------------------------------------------
+\backmatter
+\nocite{*}
+\bibliographystyle{apalike}
+\bibliography{bibliografia.bib} 
+%Aquí ponen el nombre del archivo .bib
+
+\end{document}

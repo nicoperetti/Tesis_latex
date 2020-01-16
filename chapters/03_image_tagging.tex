@@ -1,0 +1,166 @@
+\chapter{Image Tagging} \label{chapter:chapter3}
+
+En este capitulo nos enfocaremos en detallar el trabajo realizado por los directores del presente trabajo de tesis \cite{PaperDirectors} que sientan la base de todos los experimentos que se detallarán en la próxima sección, el objetivo final es obtener un sistema de etiquetado automático tal que dado una imagen $x$ , una lista de tags $t_{1}, \cdots , t_{n}$, nos retorna esta misma lista de tags pero ordenadas de acuerdo a su correspondencia semántica con lo que nos muestra la imagen. En la Tabla \ref{tab:objetives} podemos ver ejemplos en los cuales queremos etiquetar determinadas imágenes con un conjunto fijo de tags. A continuación veremos el modelo en sí mismo, siguiendo con las diferentes funciones de pérdida que se utilizaron, cómo se generaron los datos para poder entrenarlo, las métricas utilizadas y por último veremos los resultados obtenidos.
+
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|}
+        \hline
+        \textbf{x} & \textbf{$t_{1}, t_{2},t_{3} ,t_{4}$} & \textbf{Resultado}\\
+        \hline \hline
+        \begin{minipage}{.3\textwidth}
+              \includegraphics[width=\linewidth, height=40mm]{images/image205.jpg}
+        \end{minipage} & perro, gato, oveja, caballo & caballo, perro, gato, oveja \\
+        \hline
+        \begin{minipage}{.3\textwidth}
+              \includegraphics[width=\linewidth, height=40mm]{images/image202.jpg}
+        \end{minipage} & perro, gato, oveja, caballo & oveja, perro, gato, caballo \\
+        \hline
+        \begin{minipage}{.3\textwidth}
+              \includegraphics[width=\linewidth, height=50mm]{images/image221.jpg}
+        \end{minipage} & perro, gato, oveja, caballo & gato, perro, oveja,caballo \\
+        \hline
+    \end{tabular}
+    \caption{Ejemplos de objetivos a alcanzar}
+    \label{tab:objetives}
+\end{table}
+
+\section{El modelo} \label{sec:model}
+
+Dada una imagen que la representamos con $x \in X$, una etiqueta o tag $y \in Y$ el objetivo del modelo es entrenar una función tal que nos de un score o puntuación de cuan fuerte es la compatibilidad semántica de $y$ con el contenido visual de $x$. Esta función está dada por 
+
+\begin{equation} \label{eq:the_model}
+s_{( \psi, \varphi)}(x, y ;W) = \psi(x)^{T} W \varphi(y)
+\end{equation}
+
+donde $\psi: X \mapsto \mathbb{R}^{D}$, $\varphi: Y \mapsto \mathbb{R}^{E}$ representan como generar embeddings a partir de imágenes y palabras respectivamente, un ejemplo de elección puede ser \textit{(VGG19, word2vec)}, cabe destacar que estos modelos para generar embeddings tienen que estar fijos en todo momento del pipeline, volviendo a la función, el objetivo del modelo es aprender la matriz de parámetros $W \in \mathbb{R}^{D \times E}$.
+
+
+\section{Dataset} \label{sec:dataset}
+
+Para poder entrenar el modelo será requisito tener un conjunto de datos estructurados de cierta forma, en esta sección vamos a definir esa estructura y luego veremos en la Sección \ref{seccion:tags_gen} cómo a partir de un conjunto de datos existente lo construimos. Sea $D  = {(x_{0}, Y_{0}), \cdots , (x_{N}, Y_{N})}$ nuestro conjunto de datos donde $x_{i} \in X$ son imágenes e $Y_{i} = {y_{0}^{i}, \cdots , y_{|Y_{i}|}^{i}}$ es un conjunto ordenado de tags; para dar ese ordenamiento supondremos que contamos con una función de relevancia $r: Y \times X \mapsto \mathbb{R}$  tal que $r(y_{0}^{i}; x_{i}) > \cdots > r(y_{|Yi|}^{i};x_{i}) \forall i$ , esta función también la definiremos en la Sección \ref{seccion:tags_gen}.
+
+\section{Funciones de pérdida}
+
+Sea $L(W;r) = \sum_{n=1}^{N} l(\hat{Y}(x_{n}), Y_{n})$ la función de pérdida donde $Y_{n}$ es el conjunto de tags para la imagen $x_{n}$ ordenados por $\leqslant_{r}$ y $\hat{Y}(x_{n})$ el mismo conjunto de tags pero ordenados por $\leqslant_{s}$.
+En esta sección se detallarán las distintas funciones $l$, específicamente vamos a ver tres que son las que se encuentran en el trabajo realizado en conjunto por los directores \cite{PaperDirectors}.
+
+\subsubsection{Structured Joint Embedding (SJE1)}
+
+\[l_{SJE1}(x, Y) = \max_{1 \leqslant i  \leqslant |Y|} [\Delta(1, i) + s_{(\psi, \varphi)} (x, Y_{i}) - s_{(\psi, \varphi)}(x, Y_{1})]_{+}\]
+
+donde
+\[[z]_{+} \equiv \max(0, z)\]
+\[\Delta: N \times N \mapsto \mathbb{R}\]
+\[ \quad \quad \quad \Delta(k, k') = 0 \quad \textrm{si} \quad k=k'\]
+\[\quad \quad \quad \quad \quad \Delta(k, k') = 1 \quad \textrm{caso contrario} \]
+
+\subsubsection{Structured Joint Embedding (SJE2)}
+
+\[l_{SJE2}(x, Y) = \max_{1 \leqslant i  \leqslant |Y|} [\Delta(1, i) + s_{(\psi, \varphi)} (x, Y_{i}) - s_{(\psi, \varphi)}(x, Y_{1})]_{+}\]
+
+donde
+\[[z]_{+} \equiv \max(0, z)\]
+\[\Delta: N \times N \mapsto \mathbb{R}\]
+\[\quad \quad \quad \quad \quad \quad \quad \Delta(k, k') = 1 - \frac{1}{k' - k + 1} \quad \textrm{si} \quad k' > k'\]
+
+
+\textit{SJE1} y \textit{SJE2} básicamente tratan de seguir el enfoque pairwise que vimos anteriormente en los sistemas LTR Sección \ref{sec:pairwise}, ya que se podrían ver como que ambas penalizan las inversiones con respecto al primer tag asociado a la imagen.
+
+
+\subsubsection{Listwise Structured Joint Embedding (ListSJE)} \label{sec:listsje}
+
+\[l_{ListSJE}^{K_{top}}(x, Y) = \sum_{i=1}^{K_{top}} \sum_{i=k}^{|Y|} [\Delta(k, i) + s_{(\psi, \varphi)} (x, Y_{i}) - s_{(\psi, \varphi)}(x, Y_{k})]_{+}\]
+
+donde
+\[ K_{top} \leqslant |Y| \]
+\[\quad \quad \quad \quad \Delta(k, k') = 1 - \frac{1}{k' - k + 1} \quad \textrm{si} \quad k' > k'\]
+
+ La diferencia de esta formulación con las anteriores radica en que se tiene en cuenta el orden parcial de los tags y no solamente las inversiones con respecto al primero.
+
+
+\section{Métricas}
+
+La métrica que se utilizó en el trabajo propuesto de los directores y en los experimentos que detallaremos en la sección \ref{chapter:chapter4}, es \textit{precisión@k}, popularmente conocida como \textit{p@k}, con $k = 1, 5$ , que está definida como el ratio de elementos relevantes entre los primeros $k$ lugares, vamos a tratar de dar un ejemplo para poner la métrica en el contexto de nuestro alcance, supongamos que para una imagen determinada tenemos anotados los siguientes tags [\textit{perro}, \textit{gato}, \textit{caballo}, \textit{oveja}] y el modelo nos da el siguiente ordenamiento  [ \textit{gato}, \textit{caballo}, \textit{oveja}, \textit{perro}] por lo tanto $p@1 = \frac{0}{1}= 0$,   $p@2 =\frac{1}{2}$,  $p@3 = \frac{2}{3}$,  $p@4 = \frac{4}{4} = 1$ .
+
+\section{Generación de tags ordenados} \label{seccion:tags_gen}
+
+En la Sección \ref{sec:dataset} hablamos de la estructura que tenía que tener nuestro dataset pero nunca especificamos cual iba a ser concretamente, también supusimos que teníamos una función de relevancia $r$, en esta sección nos centraremos en tener estas dos definiciones.
+Recordemos que queremos llegar a tener un conjunto de datos $D  = {(x_{0}, Y_{0}), \cdots , (x_{N}, Y_{N})}$ tal que $x_{i} \in X$ son imágenes e $Y_{i} = {y_{0}^{i}, \cdots, y_{|Y_{i}|}^{i}}$ es un conjunto ordenado de tags, para la construcción del mismo se basará en el dataset \textit{COCO} \cite{chen2015microsoft} donde cada imagen viene asociada con cinco sentencias que la describen, en las Figuras \ref{fig:coco_captions1}, \ref{fig:coco_captions2}, \ref{fig:coco_captions3} podemos ver algunas de ellas con sus respectivas anotaciones, ahora bien la pregunta que sigue es ¿Cómo generar los tags a partir de las sentencias de \textit{COCO}?, para ello primero tenemos que hacer un par de definiciones,
+
+\begin{figure}
+\begin{center}
+    \includegraphics[width=.4\textwidth, height=40mm]{images/image199.jpg}
+    \caption{Captions: \begin{itemsize}
+                            \item a small fluffy dog sitting on a blue couch.
+                            \item a white dog is sitting on a couch.
+                            \item a shot shows pale blue wall over a well-stuffed blue couch that dwarfs the already small, fluffy dog resting face-forward on one of its cushions.
+                            \item a small adorable dog sitting on a sofa cushion.
+                            \item a small dog sits on a blue sofa
+                        \end{itemsize}}
+    \label{fig:coco_captions1}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+    \includegraphics[width=.4\textwidth, height=40mm]{images/image214.jpg}
+    \caption{Captions: \begin{itemsize}
+                            \item white boat navigating on waterway near populated area.
+                            \item a medium-sized boat cruising away from a harbor.
+                            \item a boat floats in the water near the shore. 
+                            \item a small white boat in the middle of the water.
+                            \item a white boat floating down a large body of water.
+                        \end{itemsize}}
+    \label{fig:coco_captions2}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+    \includegraphics[width=.4\textwidth, height=40mm]{images/image215.jpg}
+    \caption{Captions: \begin{itemsize}
+                            \item a kitchen with a slanted ceiling and skylight.
+                            \item a small kitchen with a lot of filled up shelves 
+                            \item a small kitchen with low a ceiling
+                            \item an image of a kitchen loft style setting
+                            \item a small kichen area with a sunlight and angled ceiling.
+                        \end{itemsize} }
+    \label{fig:coco_captions3}
+\end{center}
+\end{figure}
+
+
+sea $C(x) = \{c_{1}, \cdots , c_{Q}\}$ el conjunto de sentencias asociado a la imagen $x$, $t(c_{i}) \equiv t_{i} = \{w: w \in c_{i} \land w \in  SUSTANTIVO\}$ para $c_{i} \in C(x)$. Ahora estamos en condiciones de dar un conjunto de tags para cada imágen $x_{j}$, $Y_{j} = t(c_{1}) \bigcup \cdots \bigcup t(c_{Q})$. Notar que el conjunto de tags $Y_{j}$ no están ordenados de acuerdo a ninguna relevancia y nuestro objetivo es tenerlos ordenados, por lo tanto resta definir la función $r$, para ello daremos algunas definiciones predecesoras, sea $loc(w;c)$ que denota la ubicación relativa de la palabra $w$ en la sentencia $c$, por ejemplo , $loc(\textit{gato};\textit{el gato negro}) = \frac{2}{3}$, sea $count(w;c)$ la cantidad de veces que la palabra $w$ aparece en la sentencia $c$, con \textit{loc} y \textit{count} podemos definir \[r_{loc}(w) = \max_{c \in C(x)} \{1 - loc(w;c): w \in c\}\], \[r_{freq}(w) = \frac{count(w; c_{1}) + \cdots + count(w;  c_{Q})} {|t_{1}| + \cdots + |t_{Q}|}\]
+
+$r_{loc}$ trata de capturar la idea de que si una palabra es mencionada al principio de una sentencia entonces es más relevante, $r_{freq}$ trata de capturar la consistencia entre las sentencias ya que estas han sido anotadas por diferentes personas. Ahora con todas estas definiciones estamos en condiciones de definir una función de relevancia, \[r(w) = \alpha r_{freq}(w) + (1 - \alpha) r_{loc}(w), 0 \leqslant \alpha \leqslant 1\] cabe destacar que $\alpha$ será un hiper parámetro. Para resumir el conjunto de datos quedaría $Y_{j} =( \hat{Y}, r_{\alpha}) $, donde  $\hat{Y} = t(c_{1}^{j}) \bigcup \cdots \bigcup t(c_{Q}^{j})$ para $j = 0, \cdots , N$. Este proceso se aplica tanto para el conjunto de entrenamiento (82000 imágenes), como para el de validación (40000 imágenes) de \textit{COCO} para un determinado $\alpha$.
+
+
+\section{Resultados}
+
+En esta sección vamos a pasar a detallar los resultados obtenidos que se muestran en el paper \cite{PaperDirectors}, en la Tabla \ref{tab:results} podemos ver los resultados, para llegar a esos resultados en todos los casos se utilizó el conjunto de entrenamiento de \textit{COCO} para valga la redundancia entrenar y validar el modelo y el conjunto de validación de \textit{COCO} a modo de test y reporte siempre bajo el control del hiper parámetro $\alpha$, también se utilizó $(\psi, \varphi) = (VGG19, word2vec)$ como extractores de features para todos los casos y por último para el caso cuando se opto por usar \textit{ListSJE} , subsección \ref{sec:listsje}, se utilizó con $K_{top} = 5$.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        \textbf{Métrica} &
+        \textbf{Loss} &
+        \textbf{$\alpha = 0$} &
+        \textbf{$\alpha = 0.25$} &
+        \textbf{$\alpha = 0.50$} &
+        \textbf{$\alpha = 0.75$} &
+        \textbf{$\alpha = 1$}\\
+        \hline \hline
+        p@1 & SJE1 & 0.4621 & 0.5752 & 0.6332 & \textbf{0.6457} & 0.5744 \\
+        p@5 & SJE1 & \textbf{0.6876} & 0.6814 & 0.6788 & 0.6786 & 0.6634 \\
+        p@1 & SJE2 & 0.4810 & 0.5848 & 0.6395 & \textbf{0.6527} & 0.5865 \\
+        p@5 & SJE2 & \textbf{0.7162} & 0.7118 & 0.7031 & 0.7003 & 0.6747 \\
+        p@1 & ListSJE & 0.4660 & 0.5619 & 0.6250 & \textbf{0.6424} & 0.5791 \\
+        p@5 & ListSJE & 0.7415 & 0.7411 & \textbf{0.7417} & 0.7385 & 0.6899 \\
+        \hline
+    \end{tabular}
+    \caption{Resultados}
+    \label{tab:results}
+\end{table}
